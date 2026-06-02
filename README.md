@@ -36,3 +36,8 @@ To import and inspect this architecture locally within your own n8n instance, fo
 3. Click the **Canvas Menu** (three dots in the top right corner) and select **Import from File**.
 4. Select the downloaded `.json` file.
 5. Link your personal Gmail OAuth2 credentials and your Ollama API endpoint to the respective nodes.
+
+## Branching Strategy
+
+* **`development`**: Active feature iteration, prompt engineering, and live integration testing.
+* **`main`**: Production-ready source of truth containing verified, stable architectures.
