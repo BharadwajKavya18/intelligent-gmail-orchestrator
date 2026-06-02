@@ -1,0 +1,382 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "get",
+        "messageId": "={{ $json.id }}"
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        48,
+        -112
+      ],
+      "id": "c89f2c2e-6bee-406e-bedb-94cbc3199394",
+      "name": "Get a message",
+      "webhookId": "fbc0db6b-2844-47fc-8526-082e18feec14",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Ft4c3oUpxprOLGYf",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "filters": {
+          "includeSpamTrash": true
+        }
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.4,
+      "position": [
+        -160,
+        -112
+      ],
+      "id": "523a5e90-0fcb-45f5-bbb1-7472226a7c3b",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Ft4c3oUpxprOLGYf",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "llama3:latest",
+          "mode": "list",
+          "cachedResultName": "llama3:latest"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are an email sorting assistant. Analyze the subject line and body snippet of the email below to determine if it is spam/trash or a legitimate message.\n\nStrict Rule: You must ONLY output the word 'archive' if it is spam/trash, or 'keep' if it is legitimate. Do not include any other text, punctuation, or explanation.Make sure to also look at subject.\n\nSubject: {{$json.Subject}}\nBody: {{$json.snippet?.slice(0,500)}}"
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.2
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.ollama",
+      "typeVersion": 1,
+      "position": [
+        256,
+        -112
+      ],
+      "id": "c2e894cf-8860-4d82-afdd-d9d33e67aeec",
+      "name": "Message a model",
+      "credentials": {
+        "ollamaApi": {
+          "id": "3anrwArIfvj5uI06",
+          "name": "Ollama account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "37c92a57-fbe2-4b97-80a9-b86faa017165",
+              "leftValue": "={{$json.content}}",
+              "rightValue": "=archive",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        560,
+        -112
+      ],
+      "id": "ac02b6e9-436a-4178-93ab-475724aefd22",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "operation": "removeLabels",
+        "messageId": "={{ $('Get a message').item.json.id }}",
+        "labelIds": [
+          "INBOX"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        784,
+        -384
+      ],
+      "id": "58075c74-73d9-47c2-8d33-bc8bd9ed48cc",
+      "name": "Remove label from message",
+      "webhookId": "f084c006-d496-4b21-8a1e-4e2eb18c8fc3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Ft4c3oUpxprOLGYf",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Remove label from message').item.json.id }}",
+        "labelIds": [
+          "Label_3"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1200,
+        -320
+      ],
+      "id": "5ea07bdc-3c12-4442-8a81-bbc8ae3ce89b",
+      "name": "Add label to message",
+      "webhookId": "da9113a9-322a-46d2-a786-9056df410331",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Ft4c3oUpxprOLGYf",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "label",
+        "operation": "create",
+        "name": "unessesary",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        992,
+        -400
+      ],
+      "id": "9c33f7c9-5218-4a58-91c5-0fe52f31740d",
+      "name": "Create a label",
+      "webhookId": "ff3027bc-47fe-4386-aec9-17b957e31860",
+      "alwaysOutputData": true,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Ft4c3oUpxprOLGYf",
+          "name": "Gmail account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "resource": "label",
+        "operation": "create",
+        "name": "nessesary",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        992,
+        -32
+      ],
+      "id": "b464c98e-7ad9-46f8-ba0a-74bb516d133b",
+      "name": "Create a label1",
+      "webhookId": "1dbf935f-681b-4d74-b043-566cf1e35f40",
+      "alwaysOutputData": true,
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Ft4c3oUpxprOLGYf",
+          "name": "Gmail account"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "removeLabels",
+        "messageId": "={{ $('Get a message').item.json.id }}",
+        "labelIds": [
+          "INBOX"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        752,
+        -32
+      ],
+      "id": "2ad910db-b457-41f9-b77f-e3e6d239b640",
+      "name": "Remove label from message1",
+      "webhookId": "f084c006-d496-4b21-8a1e-4e2eb18c8fc3",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Ft4c3oUpxprOLGYf",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $('Remove label from message1').item.json.id }}",
+        "labelIds": [
+          "Label_4"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        1200,
+        -96
+      ],
+      "id": "6a6bf9e6-fc92-4839-9056-9fa68d970d8b",
+      "name": "Add label to message1",
+      "webhookId": "eef10ebc-0f19-43c4-9540-defde3e619ea",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "Ft4c3oUpxprOLGYf",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get a message": {
+      "main": [
+        [
+          {
+            "node": "Message a model",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message a model": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Remove label from message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Remove label from message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove label from message": {
+      "main": [
+        [
+          {
+            "node": "Create a label",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add label to message": {
+      "main": [
+        []
+      ]
+    },
+    "Create a label": {
+      "main": [
+        [
+          {
+            "node": "Add label to message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Remove label from message1": {
+      "main": [
+        [
+          {
+            "node": "Create a label1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a label1": {
+      "main": [
+        [
+          {
+            "node": "Add label to message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "f30db9a6-9afe-4e4f-bcc1-b7c534e27ce2",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "b3b0572b9914afe4e1fcfcf99b7ac04c0847c2af287435d1dc90f657dc3a552d"
+  },
+  "id": "rEYieLBaJnJUabs5",
+  "tags": []
+}
